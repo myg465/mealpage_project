@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTO Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="dev.localhost.koitt14.nonmemberPayment.NonmemberPaymentMapper">
+
+  <!-- 결제정보 입력 -->
+  <insert id="insertNonmemberPayment">
+  	INSERT INTO nonmember_payment 
+  	  VALUES(0,#{ordererName},#{ordererAddressZipcode},#{ordererAddressNew},#{ordererAddressOld},
+  	  #{ordererAddressDetail},#{ordererAddressExtra},#{ordererEmail},
+  	  #{ordererPhone},#{recipientName},#{recipientAddressZipcode},#{recipientAddressNew},#{recipientAddressOld},#{recipientAddressDetail},#{recipientAddressExtra},#{recipientPhone},#{recipientRequest},
+  	  #{amountTotal},#{amountDelivery},#{amountFinal},#{method},#{detail},#{status},NULL,SYSDATE(),NULL);
+  </insert>
+  <!-- 결제일련번호 얻기 -->
+  <select id="getNonmemberKey" resultType="Integer">
+  	SELECT seq_key FROM nonmember_payment
+      WHERE orderer_phone = #{ordererPhone}
+      ORDER BY created_date DESC LIMIT 0, 1
+  </select>
+  <!-- 주문번호 생성시 필요(몇번째인지 얻기) -->
+  <select id="getOrderCount" resultType="Integer">
+    SELECT count(DISTINCT order_number) as count
+      FROM nonmember_order
+      WHERE created_date like #{date}
+  </select>
+  <!-- 결제정보 얻기 -->
+  <select id="getPayment" resultType="dev.localhost.koitt14.payment.PaymentVo">
+  	SELECT * 
+  	  FROM nonmember_payment
+  	  WHERE seq_key=#{paymentKey}
+  </select>
+  <!-- 주문정보 입력 -->
+  <insert id="insertNonmemberOrder">
+    INSERT INTO nonmember_order 
+    VALUES(0,#{nonmemberName},#{orderNumber},#{productName},#{productPrice},#{quantity},#{status},NULL,NULL,SYSDATE(),#{productKey},#{paymentKey});
+  </insert>
+  <!-- =======================================================관리자전용========================================================== -->
+  <!-- 결제정보 얻기(관리자) -->
+  <select id="getAdminPayment" resultType="dev.localhost.koitt14.payment.PaymentVo">
+  	SELECT * 
+  	  FROM nonmember_payment 
+  	  WHERE seq_key=
+  	  (SELECT nonmember_payment_key FROM nonmember_order WHERE order_number=#{orderNumber} LIMIT 1)
+  </select>
+  
+  <!-- 입금확인 -->
+  <update id="depositOk">
+  	UPDATE nonmember_order
+  	  SET status='배송준비중'
+  	  WHERE order_number=#{orderNumber}
+  </update>
+  
+  <!-- 입금확인 (결제테이블) -->
+  <update id="payDepositOk">
+  	UPDATE nonmember_payment
+  	  SET status='입금확인',paid_date=SYSDATE()
+  	  WHERE seq_key=
+  	  (SELECT nonmember_payment_key FROM nonmember_order WHERE order_number=#{orderNumber} LIMIT 1)
+  </update>
+  
+  <!-- 일괄배송처리 -->
+  <update id="deliveryAll">
+  	UPDATE nonmember_order
+  	  SET status=#{status},delivery_company=#{deliveryCompany},tracking_number=#{trackingNumber}
+  	  WHERE order_number=#{orderNumber} AND status!='취소완료'
+  </update>
+  
+  <!-- 개별배송처리 -->
+  <update id="deliveryOne">
+  	UPDATE nonmember_order
+  	  SET status=#{status},delivery_company=#{deliveryCompany},tracking_number=#{trackingNumber}
+  	  WHERE seq_key=#{seqKey}
+  </update>
+  
+  <!-- 환불최초삽입 -->
+  <insert id="refundFirst">
+  	INSERT INTO nonmember_refund 
+  	  VALUES(0,'계좌환불',NULL,#{status},#{total},SYSDATE(),SYSDATE(),NULL,
+  	  (SELECT nonmember_payment_key FROM nonmember_order WHERE seq_key=#{seqKey} LIMIT 1))
+  </insert>
+  
+  <!-- 환불 총액수정(두번째이상일경우) -->
+  <update id="refundMulti">
+  	UPDATE nonmember_refund 
+  	  SET status=#{status},amount_cash=amount_cash+#{total},modified_date=SYSDATE() 
+  	  WHERE nonmember_payment_key=(SELECT nonmember_payment_key FROM nonmember_order WHERE seq_key=#{seqKey} LIMIT 1)
+  </update>
+  
+ 
+</mapper>

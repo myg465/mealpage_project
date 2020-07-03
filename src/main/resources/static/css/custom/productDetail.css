@@ -1,0 +1,14 @@
+.infobtn{width:100%; margin:90px 0 0 0;}
+.infobtn li{float:left; width:140px; padding:0 5px 0 0;}
+.infobtn li.last{padding:0;}
+.infobtn li input{display:block; width:100%; font-size:16px; color:#fff; 
+	text-align:center; font-weight:600; padding:16px 0; line-height:1.2; border: none; cursor: pointer;}
+.infobtn li .ty1{background:#f7703c;}
+.infobtn li .ty2{background:#5b524d;}
+.infobtn li .ty3{width:138px; color:#666; background:#fff; border:1px #d3d3d3 solid; padding:15px 0;}
+
+.priceInfo li .num .quantity{ width:50px;}
+.priceInfo li .num .stock{ display: inline-block; padding-top:3.5px; margin-left:3px; font-size: 12.5px;}
+
+.priceInfo li .totalText{ width:78px; font-size: 17px !important; font-weight: bold;}
+.priceInfo li .totalPrice{ font-size: 17px; font-weight: bold; color: #ff7f00;}

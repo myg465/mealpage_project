@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTO Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="dev.localhost.koitt14.takeback.TakebackMapper">
+  <select id="getList" resultType="dev.localhost.koitt14.takeback.TakebackOrderVo">
+    SELECT user_return.seq_key, user_return.order_number, order_group, order_price, order_quantity, product_name, user_return.status, user_order.created_date
+      FROM user_return LEFT JOIN user_order
+      ON user_return.order_number = user_order.order_number
+      WHERE user_return.account_key = #{param1}
+      GROUP BY order_number
+      ORDER BY user_order.created_date DESC LIMIT #{param2}, #{param3}
+  </select>
+
+
+  <select id="getCount" resultType="Integer">
+    SELECT count(*) FROM user_return
+  </select>
+
+  <select id="selectTakeback" resultType="dev.localhost.koitt14.takeback.TakebackVo">
+    SELECT * FROM user_return
+      WHERE seq_key = #{param1} and account_key = #{param2}
+  </select>
+
+  <select id="selectRecentTakeback" resultType="Integer">
+    SELECT seq_key FROM user_return
+      WHERE order_number = #{param1} and account_key = #{param2}
+      ORDER BY created_date DESC LIMIT 0, 1
+  </select>
+
+  <select id="selectTakebackByAdmin" resultType="dev.localhost.koitt14.takeback.TakebackVo">
+    SELECT * FROM user_return
+      WHERE order_number = #{param1}
+      ORDER BY created_date DESC LIMIT 0, 1
+  </select>
+
+  <insert id="insertTakeback">
+    INSERT INTO user_return
+      (charged, content, status, order_number, account_key)
+      VALUES (#{param1}, #{param2}, #{param3}, #{param4}, #{param5})
+  </insert>
+
+  <update id="updateTakeback">
+    UPDATE user_return
+      SET reply = #{param1}, status = #{param2}, reply_created_date = NOW()
+      WHERE seq_key = #{param3}
+  </update>
+
+  <delete id="deleteTakeback">
+    DELETE FROM user_return
+      WHERE seq_key = #{param1} and account_key = #{param2}
+  </delete>
+</mapper>

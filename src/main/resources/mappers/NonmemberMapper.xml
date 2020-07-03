@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTO Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="dev.localhost.koitt14.nonmember.NonmemberMapper">
+  
+  <!-- 로그인 -->
+  <select id="nonmemberLogin" resultType="String">
+  	SELECT nonmember_name
+  	  FROM nonmember_order
+  	  WHERE nonmember_name=#{nonmemberName}
+  	  AND order_number=#{orderNumber}
+  	  LIMIT 1
+  </select>
+  
+  <!-- ========================================= 주문내역 ========================================= -->
+  
+  <!-- 주문내역(개괄) -->
+  <select id="nonmemberOrderList" resultType="dev.localhost.koitt14.nonmember.NonmemberOrderVo">
+	SELECT * 
+	  FROM nonmember_order 
+	  WHERE nonmember_name=#{nonmemberName} 
+	  AND order_number=#{orderNumber}
+	  ORDER BY seq_key DESC
+      limit 1
+  </select>
+  
+  <!-- 주문내역(상세) -->
+  <select id="nonmemberOrderListAll" resultType="dev.localhost.koitt14.nonmember.NonmemberOrderVo">
+	SELECT seq_key, nonmember_name, order_number, product_name, product_price, quantity, status,
+	  delivery_company, tracking_number, created_date, product_key, nonmember_payment_key  
+	  FROM nonmember_order 
+	  WHERE nonmember_name=#{nonmemberName}
+	  AND order_number=#{orderNumber}
+	  ORDER BY seq_key DESC 
+	  LIMIT #{startRow}, #{limit}
+  </select>
+  
+  <!-- 주문내역 리스트 갯수 -->
+  <select id="getNonmemberOrderListCount" resultType="int">
+  	SELECT COUNT(*) FROM nonmember_order
+  	  WHERE nonmember_name=#{nonmemberName}
+	  AND order_number=#{orderNumber}
+  </select>
+  
+  <!-- 주문내역 합계 -->
+  <select id="getTotalPrice" resultType="int">
+  	SELECT IFNULL(SUM(product_price*quantity), 0) AS totalPrice 
+  	  FROM nonmember_order 
+  	  WHERE nonmember_name=#{nonmemberName}
+  	  AND order_number=#{orderNumber}
+  </select>
+  
+  <!-- 주문내역 상세보기 -->
+  <select id="nonmemberDeliveryView" resultType="dev.localhost.koitt14.nonmember.NonmemberPayAndOrderVo">
+	SELECT o.product_name,o.product_price,o.quantity,o.tracking_number,o.delivery_company,o.created_date,
+	p.recipient_name,p.recipient_phone,p.recipient_address_new,p.recipient_address_old,p.recipient_address_detail,
+	p.recipient_request,p.method,p.status,p.amount_delivery,p.amount_final 
+	  FROM nonmember_order AS o , nonmember_payment AS p 
+	  WHERE o.seq_key=#{seqKey} AND o.nonmember_payment_key=p.seq_key;  	
+  </select>
+  
+  <!-- ========================================= 반품교환내역 ========================================= -->
+  
+  <!-- 반품교환(개괄) -->
+  <select id="takebackStateList" resultType="dev.localhost.koitt14.nonmember.NonmemberOrderVo">
+	SELECT * 
+	  FROM nonmember_order 
+	  WHERE order_number=#{orderNumber} AND nonmember_name=#{nonmemberName}
+	    AND (status LIKE '%교환%' 
+        OR status LIKE '%환불%'
+        OR status LIKE '%반품%'
+        OR status LIKE '%취소%')
+	    
+	  LIMIT 1
+  </select>
+  
+  <!-- 반품교환 총개수 가져오기 -->
+  <select id="TakebackStateListCount" resultType="int">
+  	SELECT COUNT(*) FROM nonmember_order
+  	  WHERE order_number=#{orderNumber} AND nonmember_name=#{nonmemberName}
+	    AND (status LIKE '%교환%' 
+        OR status LIKE '%환불%'
+        OR status LIKE '%반품%'
+        OR status LIKE '%취소%')
+  </select>
+  
+  <!-- 반품교환 전체 금액 가져오기 -->
+  <select id="totalTakebackPrice" resultType="int">
+  	SELECT IFNULL(SUM(product_price*quantity), 0) AS totalPrice 
+  	  FROM nonmember_order 
+  	  WHERE order_number=#{orderNumber} AND nonmember_name=#{nonmemberName}
+	    AND (status LIKE '%교환%' 
+        OR status LIKE '%환불%'
+        OR status LIKE '%반품%'
+        OR status LIKE '%취소%')
+  </select>
+  
+  <!-- 반품교환 전체 리스트 가져오기 -->
+  <select id="takebackStateListAll" resultType="dev.localhost.koitt14.nonmember.NonmemberOrderVo">
+	SELECT * 
+	  FROM nonmember_order 
+	  WHERE order_number=#{orderNumber} and nonmember_name=#{nonmemberName}
+	    AND (status LIKE '%교환%' 
+        OR status LIKE '%환불%'
+        OR status LIKE '%반품%'
+        OR status LIKE '%취소%')
+	  LIMIT #{startRow},#{limit}
+  </select>
+  <!-- 주문일련번호 얻어오기 -->
+  <select id="getOrderKey" resultType="int">
+  	SELECT nonmember_order_key 
+  	  FROM nonmember_return 
+  	  WHERE seq_key=#{seqKey}
+  </select>
+  <!-- 반품교환 상세보기 -->
+  <select id="nonmemberRefundView" resultType="dev.localhost.koitt14.nonmember.NonmemberPayAndReturnVo">
+  	SELECT o.product_name,o.product_price,o.quantity,o.created_date,
+  	p.method AS p_method,p.amount_delivery,p.amount_final,p.status AS p_status,
+  	r.refund_date,r.method,r.status,r.amount_cash 
+  	  FROM nonmember_order AS o, nonmember_payment AS p, nonmember_refund AS r 
+  	  WHERE o.seq_key=#{orderKey} AND o.nonmember_payment_key=p.seq_key AND r.nonmember_payment_key=p.seq_key
+  </select>
+  
+  <!-- 반품교환프로세스(주문상태 바꾸기) -->
+  <update id="orderStateChange">
+  	UPDATE nonmember_order 
+  	  SET status=#{category} 
+  	  WHERE seq_key=#{seqKey}
+  </update>
+  
+  <!-- 반품교환프로세스(반품교환 신청) -->
+  <insert id="takebackWrite">
+  	INSERT INTO nonmember_return(seq_key, content, nonmember_order_key) VALUES (0,#{content},#{seqKey});
+  </insert>
+  
+  <!-- 반품교환 사유보기 -->
+  <select id="takebackReasonView" resultType="dev.localhost.koitt14.nonmember.NonmemberReturnVo">
+  	SELECT * FROM nonmember_return 
+  	  WHERE nonmember_order_key=#{seqKey}
+  	  LIMIT 1
+  </select>
+  
+  <!-- 반품교환 사유수정 -->
+  <update id="takebackReasonModify">
+  	UPDATE nonmember_return 
+  	  SET content=#{content}, modified_date=SYSDATE() 
+  	  WHERE seq_key=#{seqKey}
+  </update>
+  
+  <!-- ======================================관리자 전용================================================ -->
+  <!-- 주문내역 갯수얻기(검색) -->
+  <select id="orderListSearchCount" resultType="int">
+  	SELECT COUNT(DISTINCT o.order_number) 
+  	  FROM nonmember_order AS o INNER JOIN nonmember_payment AS p 
+  	  ON o.nonmember_payment_key=p.seq_key 
+  	  <if test="search!='All'"> 
+  	  WHERE o.product_name LIKE CONCAT('%',#{search},'%') OR o.status LIKE CONCAT('%',#{search},'%')
+  	  </if>
+  </select>
+  <!-- 주문내역 갯수얻기(주문전체)(검색) -->
+  <select id="orderStateSearchCount" resultType="int">
+  	SELECT COUNT(*) 
+  	  FROM nonmember_order
+  	  <if test="search!='All'"> 
+  	  WHERE status LIKE CONCAT('%',#{search},'%')
+  	  </if>
+  </select>
+  <!-- 주문내역 전체얻기(검색) -->
+  <select id="orderListAll" resultType="dev.localhost.koitt14.nonmember.NonmemberAdminOrderVo">
+	SELECT o.order_number, o.nonmember_name,o.product_name,o.status AS oStatus,p.amount_final,p.status AS pStatus,p.created_date,count(o.seq_key) AS order_group
+  	  FROM nonmember_order AS o INNER JOIN nonmember_payment AS p 
+  	  ON o.nonmember_payment_key=p.seq_key 
+  	  <if test="search!='All'">
+  	  WHERE o.product_name LIKE CONCAT('%',#{search},'%') OR o.status LIKE CONCAT('%',#{search},'%')
+  	  </if> 
+  	  GROUP BY o.order_number
+  	  ${sqlOrder}
+  	  LIMIT #{orderStartRow},10
+  </select>
+  <!-- 반품 등 사유 답변달기 -->
+  <update id="reasonReplyWrite">
+  	UPDATE nonmember_return 
+  	  SET reply=#{reply}, reply_created_date=SYSDATE()
+  	  WHERE seq_key=#{seqKey}
+  </update>
+  <!-- 반품 등 사유 답변수정 -->
+  <update id="reasonReplyModify">
+  	UPDATE nonmember_return 
+  	  SET reply=#{replyModify}, reply_modified_date=SYSDATE()
+  	  WHERE seq_key=#{seqKey}
+  </update>
+  <!-- 반품테이블 고유번호 얻기 -->
+  <select id="getReturnKey" resultType="int">
+  	SELECT seq_key FROM nonmember_return WHERE nonmember_order_key=#{seqKey}
+  </select>
+  
+  
+  
+</mapper>

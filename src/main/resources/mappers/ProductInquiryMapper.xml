@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTO Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="dev.localhost.koitt14.productInquiry.ProductInquiryMapper">
+  
+  <!-- 상품문의전체리스트 -->
+  <select id="productInquiryList" resultType="dev.localhost.koitt14.productInquiry.ProductInquiryVo">
+    
+	SELECT i.seq_key,i.content,i.created_date,i.modified_date,IFNULL(i.reply,'n'),i.reply_created_date,
+	  i.reply_modified_date,i.secret,i.product_key,i.account_key,a.id,p.name
+	  FROM product_inquiry AS i INNER JOIN account AS a INNER JOIN product AS p
+	  ON i.account_key=a.seq_key AND i.product_key=p.seq_key
+	  WHERE product_key=#{seqKey}
+	  ORDER BY seq_key DESC 
+	  limit #{inquiryStartRow},5
+  </select>
+  
+  <!-- 상품문의수 카운트 -->
+  <select id="inquiryListCount" resultType="int">
+  	SELECT COUNT(*) FROM product_inquiry
+  	  WHERE product_key=#{seqKey}
+  </select>
+  
+  <!-- 상품문의수 전체 카운트 -->
+  <select id="inquiryCount" resultType="int">
+  	SELECT COUNT(*) 
+  	  FROM product_inquiry 
+  	  <if test="status=='reply'">
+  	  	WHERE reply is null
+  	  </if>
+  	  <if test="status=='noReply'">
+  	  	WHERE reply is not null
+  	  </if>
+  
+  </select>
+  
+  <!-- 상품문의 작성 -->
+  <insert id="inquiryWrite">
+  	INSERT INTO product_inquiry(seq_key,content,secret,product_key,account_key) 
+  	  VALUES(0,#{content},#{secret},#{productKey},#{accountKey})
+  </insert>
+  
+  <!-- 상품문의 수정뷰 얻어오기 -->
+  <select id="inquiryModifyView" resultType="dev.localhost.koitt14.productInquiry.ProductInquiryVo">
+  	SELECT i.seq_key,i.content,i.created_date,i.modified_date,i.reply,i.reply_created_date,
+	  i.reply_modified_date,i.secret,i.product_key,i.account_key,a.id,p.name
+	  FROM product_inquiry AS i INNER JOIN account AS a INNER JOIN product AS p
+	  ON i.account_key=a.seq_key AND i.product_key=p.seq_key
+	  WHERE i.seq_key=#{seqKey}
+  </select>
+  
+  <!-- 상품문의 수정 -->
+  <update id="inquiryModify">
+  	UPDATE product_inquiry 
+  	  SET content=#{content}, modified_date=SYSDATE(), secret=#{secret} 
+  	  WHERE seq_key=#{seqKey}
+  </update>
+  
+  <!-- 상품문의 삭제 -->
+  <delete id="inquiryDelete">
+  	DELETE FROM product_inquiry WHERE seq_key=#{seqKey}
+  </delete>
+  
+  <!-- ======================================관리자 전용========================================== -->
+  
+  <!-- 전체얻기 -->
+  <select id="inquiryListAll" resultType="dev.localhost.koitt14.productInquiry.ProductInquiryVo">
+  	SELECT i.seq_key,i.content,i.created_date,i.modified_date,IFNULL(i.reply,'n'),i.reply_created_date,
+	  i.reply_modified_date,i.secret,i.product_key,i.account_key,a.id,p.name
+	  FROM product_inquiry AS i INNER JOIN account AS a INNER JOIN product AS p
+	  ON i.account_key=a.seq_key AND i.product_key=p.seq_key
+	  <if test="search!='All'">
+	    WHERE p.name LIKE CONCAT('%',#{search},'%')
+	  </if>
+	  ${sqlOrder} 
+	  limit #{inquiryStartRow},10
+  </select>
+  
+  <!-- 검색카운트 얻기 -->
+  <select id="inquiryListSearchCount" resultType="int">
+  	SELECT count(*)
+	  FROM product_inquiry AS i INNER JOIN product AS p
+	  ON i.product_key=p.seq_key
+	  <if test="search!='All'">
+	    WHERE p.name LIKE CONCAT('%',#{search},'%')
+	  </if>
+  </select>
+  <!-- 답변달기 -->
+  <update id="replyInsert">
+  	UPDATE product_inquiry 
+  	  SET reply=#{replyContent},reply_created_date=SYSDATE()
+  	  WHERE seq_key=#{seqKey}
+  </update>
+  <!-- 답변수정 -->
+  <update id="replyModify">
+  	UPDATE product_inquiry 
+  	  SET reply=#{replyModify},reply_modified_date=SYSDATE()
+  	  WHERE seq_key=#{seqKey}
+  </update>
+  
+  
+  
+
+
+</mapper>

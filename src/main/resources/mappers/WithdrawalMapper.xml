@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTO Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="dev.localhost.koitt14.account.WithdrawalMapper">
+  <insert id="insertWithdrawal">
+    INSERT INTO withdrawal
+      (account_key, id, quit_reason)
+      VALUES (#{param1}, #{param2}, #{param3})
+  </insert>
+</mapper>

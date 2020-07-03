@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTO Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="dev.localhost.koitt14.product.ProductMapper">
+
+  <!-- 기본 셀렉트: 카테고리로 들어왔을때 제품목록 검색 -->
+  <select id="productList" resultType="dev.localhost.koitt14.product.ProductVo">
+	SELECT seq_key,category1,category2,name,price,detail_image_filename1 
+	  FROM product
+	  <if test="category2!='All'"> 
+	  	WHERE category1=#{category1} AND category2=#{category2}
+	  </if> 
+	  <if test="category2=='All'"> 
+	  	WHERE category1=#{category1}
+	  </if> 
+	  ORDER BY seq_key ASC 
+	  limit #{startRow},#{limit}
+  </select>
+  
+  <!-- wishlist -->
+  <select id="getWishList" resultType="dev.localhost.koitt14.product.WishListVo">
+  	SELECT u.seq_key, u.quantity, u.product_key, p.detail_image_filename1 
+  	  FROM user_wishlist AS u ,product AS p 
+  	  WHERE account_key=#{accountKey} AND u.product_key=p.seq_key
+  </select>
+  
+  <!-- 하위카테고리 목록 검색 -->
+  <select id="categoryList" resultType="String">
+    SELECT DISTINCT category2 FROM product
+      WHERE category1=#{category1}
+  </select>
+  
+  <!-- 제품 리스트 개수 검색 -->
+  <select id="listCount" resultType="int">
+  	SELECT COUNT(*) FROM product 
+  	  <if test="category2!='All'"> 
+	  	WHERE category1=#{category1} AND category2=#{category2}
+	  </if> 
+	  <if test="category2=='All'"> 
+	  	WHERE category1=#{category1}
+	  </if> 
+  </select>
+  
+  <!-- 제품 상세정보 검색 -->
+  <select id="detail" resultType="dev.localhost.koitt14.product.ProductVo">
+  	SELECT seq_key,category1,category2,name,price,stock,calorie,type,productor,importer,import_declaration,
+  	use_by_date,volume,raw_materials,nutrients,gm_food,cs_phone,recommend,new AS new_product,sale_percent,detail_image_filename1,
+  	detail_image_filename2,detail_image_filename3,content_text,content_image_filename
+  	  FROM product 
+  	  WHERE seq_key=#{seqKey}
+  </select>
+  
+  <!-- 제품검색 결과값 검색 -->
+  <select id="productSearch" resultType="dev.localhost.koitt14.product.ProductVo">
+	SELECT seq_key,category1,category2,name,price,detail_image_filename1  
+	  FROM product 
+	  WHERE name LIKE CONCAT('%',#{productSearch},'%')
+	  OR category1 LIKE CONCAT('%',#{productSearch},'%')
+	  OR category2 LIKE CONCAT('%',#{productSearch},'%')
+	  ${orderSql} <!-- 값이아닌것을 삽입할때는 $를 붙여야 한다. -->
+	  limit #{startRow},12
+  </select>
+  
+  <!-- 제품겅색(인기순정렬)  -->
+  <select id="productHotSearch" resultType="dev.localhost.koitt14.product.ProductVo">
+  	SELECT p.seq_key,p.category1,p.category2,p.name,p.price,p.detail_image_filename1,round(avg(u.grade)) AS grade
+	  FROM product AS p JOIN user_review AS u
+	  ON p.seq_key=u.product_key
+        WHERE name LIKE CONCAT('%',#{productSearch},'%')
+	    OR category1 LIKE CONCAT('%',#{productSearch},'%')
+	    OR category2 LIKE CONCAT('%',#{productSearch},'%')
+      GROUP BY seq_key
+      ORDER BY grade DESC
+      LIMIT #{startRow},12;
+  </select>
+  
+  
+  <!-- 제품검색 리스트 개수 검색 -->
+  <select id="searchListCount" resultType="int">
+  	SELECT COUNT(*) FROM product 
+  	  WHERE name LIKE CONCAT('%',#{productSearch},'%')
+  	  OR category1 LIKE CONCAT('%',#{productSearch},'%')
+	  OR category2 LIKE CONCAT('%',#{productSearch},'%')
+  </select>
+  <!-- =================================메인관련========================================= -->
+  	
+  <!-- 세일상품 얻기(10개) -->
+  <select id="saleProduct" resultType="dev.localhost.koitt14.product.ProductVo">
+  	SELECT seq_key,category1,category2,name,price,stock,calorie,type,productor,importer,import_declaration,
+  	use_by_date,volume,raw_materials,nutrients,gm_food,cs_phone,recommend,new AS new_product,sale_percent,detail_image_filename1,
+  	detail_image_filename2,detail_image_filename3,content_text,content_image_filename
+  	  FROM product 
+  	  WHERE sale_percent>0 LIMIT 10
+  </select>
+  
+  <!-- 신제품 얻기(1개) -->
+  <select id="newProduct" resultType="dev.localhost.koitt14.product.ProductVo">
+  	SELECT seq_key,category1,category2,name,price,stock,calorie,type,productor,importer,import_declaration,
+  	use_by_date,volume,raw_materials,nutrients,gm_food,cs_phone,recommend,new AS new_product,sale_percent,detail_image_filename1,
+  	detail_image_filename2,detail_image_filename3,content_text,content_image_filename
+  	  FROM product 
+  	  WHERE new='Y' 
+  	  ORDER BY seq_key DESC LIMIT 1
+  </select>
+  
+  <!-- 추천제품 얻기(2개) -->
+  <select id="recommendProduct" resultType="dev.localhost.koitt14.product.ProductVo">
+  	SELECT seq_key,category1,category2,name,price,stock,calorie,type,productor,importer,import_declaration,
+  	use_by_date,volume,raw_materials,nutrients,gm_food,cs_phone,recommend,new AS new_product,sale_percent,detail_image_filename1,
+  	detail_image_filename2,detail_image_filename3,content_text,content_image_filename
+  	  FROM product 
+  	  WHERE recommend='Y' 
+  	  ORDER BY seq_key DESC LIMIT 2
+  </select>
+  
+  <!-- 베스트셀러 얻기(제품중 평점이 높은 상위 10개만 가져옴) -->
+  <select id="bestProduct" resultType="dev.localhost.koitt14.product.ProductVo">
+  	SELECT p.seq_key,p.name,p.price,p.detail_image_filename1,round(avg(u.grade)) AS grade
+	  FROM product AS p JOIN user_review AS u
+	  ON p.seq_key=u.product_key
+      GROUP BY seq_key
+      ORDER BY grade DESC
+      LIMIT 10;
+  </select>
+  
+  <!-- 배너얻기(카테고리로 검색) -->
+  <select id="getBanner" resultType="String">
+  	SELECT filename FROM banner
+  	  WHERE category=#{category}
+  	  ORDER BY seq_key DESC
+  </select>
+  
+  <!-- ====================================nav관련====================================== -->
+  
+  <!-- 1차 카테고리 카운트얻기 -->
+  <select id="navNum" resultType="int">
+  	SELECT COUNT(DISTINCT category1) FROM product
+  </select>
+  
+  <!-- 1차 카테고리 리스트얻기 -->
+  <select id="navCategory1" resultType="String">
+  	SELECT DISTINCT category1 FROM product
+  </select>
+  
+  <!-- 2차 카테고리 리스트얻기 -->
+  <select id="navCategory2" resultType="String">
+  	SELECT DISTINCT category2 FROM product 
+  	  WHERE category1=#{category1}
+  </select>
+  
+  <!-- ==================================재고관련========================================= -->
+  
+  <!-- 재고체크 -->
+  <select id="stockCheck" resultType="int">
+  	SELECT stock FROM product WHERE seq_key=#{seqKey}
+  </select>
+  
+  <!-- 상품구매시 재고량 감소 -->
+  <update id="stockDown">
+  	UPDATE product SET stock=stock-#{quantity} WHERE seq_key=#{seqKey}
+  </update>
+  
+  <!-- 반품,교환,환불,취소시 재고량 증가 -->
+  <update id="stockUp">
+  	UPDATE product SET stock=stock+#{quantity} WHERE seq_key=#{seqKey}
+  </update>
+  <!-- =================================관리자 전용======================================== -->
+  
+  <!-- 상품전체리스트 얻기 -->
+  <select id="productListAll" resultType="dev.localhost.koitt14.product.ProductVo">
+  	SELECT seq_key,category1,category2,name,price,stock,calorie,type,productor,importer,import_declaration,
+  	use_by_date,volume,raw_materials,nutrients,gm_food,cs_phone,recommend,new AS new_product,sale_percent,detail_image_filename1,
+  	detail_image_filename2,detail_image_filename3,content_text,content_image_filename
+	  FROM product
+	  <if test="search!='All'">
+	    WHERE category1 LIKE CONCAT('%',#{search},'%')
+	    OR category2 LIKE CONCAT('%',#{search},'%')
+	    OR name LIKE CONCAT('%',#{search},'%')
+	  </if>
+	  ${sqlOrder} 
+	  limit #{productStartRow},10
+  </select>
+  
+  <!-- 검색카운트 얻기 -->
+  <select id="productListSearchCount" resultType="int">
+  	SELECT count(*)
+	  FROM product
+	  <if test="search!='All'">
+	    WHERE category1 LIKE CONCAT('%',#{search},'%')
+	    OR category2 LIKE CONCAT('%',#{search},'%')
+	    OR name LIKE CONCAT('%',#{search},'%')
+	  </if>
+  </select>
+  
+  <!-- 상품등록 -->
+  <insert id="productInsert">
+  	INSERT INTO product
+  	  VALUES(0,#{category1},#{category2},#{name},#{price},#{stock},
+  	  #{calorie},#{type},#{productor},#{importer},#{importDeclaration},#{useByDate},
+  	  #{volume},#{rawMaterials},#{nutrients},#{gmFood},#{csPhone},#{recommend},
+  	  #{newProduct},#{salePercent},#{detailImageFilename1},#{detailImageFilename2},#{detailImageFilename3},
+  	  #{contentText},#{contentImageFilename})
+  </insert>
+  
+  <!-- 상품수정 -->
+  <update id="productModify">
+  	UPDATE product
+  	  set category1=#{category1},category2=#{category2},name=#{name},price=#{price},stock=#{stock},
+  	  calorie=#{calorie},type=#{type},productor=#{productor},importer=#{importer},import_declaration=#{importDeclaration},
+  	  use_by_date=#{useByDate},volume=#{volume},raw_materials=#{rawMaterials},nutrients=#{nutrients},gm_food=#{gmFood},
+  	  cs_phone=#{csPhone},recommend=#{recommend},new=#{newProduct},sale_percent=#{salePercent},detail_image_filename1=#{detailImageFilename1},
+  	  detail_image_filename2=#{detailImageFilename2},detail_image_filename3=#{detailImageFilename3},content_text=#{contentText},
+  	  content_image_filename=#{contentImageFilename}
+  	  WHERE seq_key=#{seqKey}
+  </update>
+  
+  <!-- 상품삭제 -->
+  <delete id="productDelete">
+  	DELETE FROM product
+  	  WHERE seq_key=#{seqKey}
+  </delete>
+  
+  <!-- =========================================배너관련=========================================================== -->
+  <!-- 배너리스트 얻기 -->
+  <select id="getBannerList" resultType="dev.localhost.koitt14.admin.BannerVo">
+  	SELECT * FROM banner
+  	  ORDER BY seq_key DESC
+  </select>
+  
+  <!-- 배너등록 -->
+  <insert id="bannerInsert">
+  	INSERT INTO banner 
+  	  VALUES(0,#{category},#{filename})
+  </insert>
+
+  <!-- 배너수정뷰 -->
+  <select id="bannerModifyView" resultType="dev.localhost.koitt14.admin.BannerVo">
+  	SELECT * FROM banner
+  	  WHERE seq_key=#{seqKey}
+  </select>
+  
+  <!-- 배너수정 -->
+  <update id="bannerModify">
+  	UPDATE banner
+  	  SET category=#{category}, filename=#{filename}
+  	  WHERE seq_key=#{seqKey}
+  </update>
+  
+  <!-- 배너삭제 -->
+  <delete id="bannerDelete">
+  	DELETE FROM banner 
+  	  WHERE seq_key=#{seqKey}
+  </delete>
+
+
+</mapper>

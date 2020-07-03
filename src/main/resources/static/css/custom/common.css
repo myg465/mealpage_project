@@ -1,0 +1,14 @@
+#header { margin-bottom: -20px; }
+#title span { font-family: "Saira Semi Condensed", sans-serif; font-size: 45px; position: relative; left: 50px; }
+#title span.meal { color: steelblue; }
+#title span.page { color: black; }
+
+.footer { font-size: 35px !important; left: 0px !important; top: 15px; }
+
+#gnb { background: steelblue; }
+
+#gnb #top ul li.brand {
+    background: url(/img/temp/bg/bg_navi_brand.gif) left top #2d5373 no-repeat;
+}
+
+.no-outline { border: none; outline: none; }

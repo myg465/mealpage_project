@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTO Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="dev.localhost.koitt14.account.AuthMapper">
+  <select id="selectAuth" resultType="dev.localhost.koitt14.account.AuthVo">
+    SELECT * FROM auth
+      WHERE phone = #{param1}
+  </select>
+
+  <select id="getEmailCode" resultType="String">
+    SELECT email_code FROM auth
+      WHERE email = #{param1}
+  </select>
+
+  <select id="getPhoneCode" resultType="String">
+    SELECT phone_code FROM auth
+      WHERE phone = #{param1}
+  </select>
+
+  <select id="getPhoneSendDate" resultType="java.sql.Timestamp">
+    SELECT phone_send_date FROM auth
+      WHERE seq_key = #{param1}
+  </select>
+
+  <insert id="insertAuth">
+    INSERT INTO auth
+      (phone, email, phone_code, email_code)
+      VALUES (#{param1}, #{param2}, #{param3}, #{param4})
+  </insert>
+
+  <delete id="updateAuth">
+    UPDATE auth
+      SET phone = #{param1}, email = #{param2}, phone_code = #{param3}, email_code = #{param4}, phone_send_date = NOW(), email_send_date = NOW()
+      WHERE seq_key = #{param5}
+  </delete>
+
+  <update id="updateAuthEmail">
+    UPDATE auth
+      SET email = #{param1}, email_code = #{param2}, email_send_date = NOW()
+      WHERE seq_key = #{param3}
+  </update>
+
+  <update id="updateAuthPhone">
+    UPDATE auth
+      SET phone = #{param1}, phone_code = #{param2}, phone_send_date = NOW()
+      WHERE seq_key = #{param3}
+  </update>
+
+  <update id="deleteAuth">
+    DELETE from auth
+      WHERE phone = #{param1}
+  </update>
+</mapper>

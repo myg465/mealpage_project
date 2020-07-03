@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTO Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="dev.localhost.koitt14.order.OrderMapper">
+  <select id="getOrderCount" resultType="Integer">
+    SELECT count(DISTINCT order_number)
+      FROM user_order
+      WHERE created_date like #{param1}
+  </select>
+
+  <select id="getUserOrderCount" resultType="Integer">
+    SELECT count(DISTINCT order_number)
+      FROM user_order
+      WHERE account_key = #{param1}
+  </select>
+
+  <select id="getOngoingOrderCount" resultType="Integer">
+    SELECT count(DISTINCT order_number)
+      FROM user_order
+      WHERE account_key = #{param1} AND status NOT IN ('구매확정', '주문취소', '환불완료')
+  </select>
+
+  <select id="getList" resultType="dev.localhost.koitt14.order.OrderVo">
+    SELECT * FROM user_order
+      WHERE account_key = #{param1}
+      GROUP BY order_number
+      ORDER BY created_date DESC LIMIT #{param2}, #{param3}
+  </select>
+
+  <select id="getOrderDetail" resultType="dev.localhost.koitt14.order.OrderVo">
+    SELECT * FROM user_order
+      WHERE order_number = #{param1} and account_key = #{param2}
+      ORDER BY created_date DESC
+  </select>
+
+  <select id="getOrderPrice" resultType="Integer">
+    SELECT DISTINCT order_price
+      FROM user_order
+      WHERE order_number = #{param1} and account_key = #{param2}
+  </select>
+
+  <insert id="insertOrder">
+    INSERT INTO user_order
+      (order_number, order_group, order_price, order_quantity, product_name, product_price, quantity, status, product_key, account_key, user_payment_key)
+      VALUES (#{param1}, #{param2}, #{param3}, #{param4}, #{param5}, #{param6}, #{param7}, #{param8}, #{param9}, #{param10}, #{param11})
+  </insert>
+
+  <select id="getPaymentKey" resultType="Integer">
+    SELECT DISTINCT user_payment_key
+      FROM user_order
+      WHERE order_number = #{param1}
+  </select>
+
+  <update id="updateStatus">
+    UPDATE user_order
+      SET status = #{param1}
+      WHERE order_number = #{param2} and account_key = #{param3}
+  </update>
+
+  <!-- 관리자 페이지용 구문 시작 -->
+  <select id="getStatusCount" resultType="Integer">
+    SELECT count(DISTINCT order_number)
+      FROM user_order
+      WHERE status like #{param1}
+  </select>
+
+  <select id="getUserOrderCountByAdmin" resultType="Integer">
+    SELECT count(DISTINCT order_number)
+      FROM user_order
+  </select>
+
+  <select id="getListByAdmin" resultType="dev.localhost.koitt14.order.OrderListVo">
+    SELECT order_number, order_group, order_price, order_quantity, product_name, user_order.status, user_order.created_date, orderer_name, id
+      FROM user_order INNER JOIN user_payment
+        ON user_order.user_payment_key = user_payment.seq_key
+      INNER JOIN account
+        ON user_order.account_key = account.seq_key
+      GROUP BY order_number
+      ORDER BY user_order.created_date DESC LIMIT #{param1}, #{param2}
+  </select>
+
+  <select id="getOrderStatusByAdmin" resultType="String">
+    SELECT DISTINCT status
+      FROM user_order
+      WHERE order_number = #{param1}
+  </select>
+
+  <select id="getOrderDetailByAdmin" resultType="dev.localhost.koitt14.order.OrderVo">
+    SELECT * FROM user_order
+      WHERE order_number = #{param1}
+      ORDER BY created_date DESC
+  </select>
+
+  <update id="updateStatusByAdmin">
+    UPDATE user_order
+      SET status = #{param1}
+      WHERE order_number = #{param2}
+  </update>
+
+  <select id="getStatusList" resultType="dev.localhost.koitt14.order.OrderListVo">
+    SELECT order_number, order_group, order_price, order_quantity, product_name, user_order.status, user_order.created_date, orderer_name, id
+      FROM user_order INNER JOIN user_payment
+        ON user_order.user_payment_key = user_payment.seq_key
+      INNER JOIN account
+        ON user_order.account_key = account.seq_key
+      WHERE user_order.status like #{param1}
+      GROUP BY order_number
+      ORDER BY user_order.created_date DESC LIMIT #{param2}, #{param3}
+  </select>
+
+  <select id="getEtcCount" resultType="Integer">
+    SELECT count(DISTINCT order_number)
+      FROM user_order
+      WHERE status in ('주문취소', '입금대기', '환불완료')
+  </select>
+
+  <select id="getEtcList" resultType="dev.localhost.koitt14.order.OrderListVo">
+    SELECT order_number, order_group, order_price, order_quantity, product_name, user_order.status, user_order.created_date, orderer_name, id
+      FROM user_order INNER JOIN user_payment
+        ON user_order.user_payment_key = user_payment.seq_key
+      INNER JOIN account
+        ON user_order.account_key = account.seq_key
+      WHERE user_order.status in ('주문취소', '입금대기', '환불완료')
+      GROUP BY order_number
+      ORDER BY user_order.created_date DESC LIMIT #{param1}, #{param2}
+  </select>
+
+  <select id="getSearchNameCount" resultType="Integer">
+    SELECT count(DISTINCT order_number)
+      FROM user_order INNER JOIN account
+      ON user_order.account_key = account.seq_key
+      WHERE account.name like #{param1}
+  </select>
+
+  <select id="searchNameList" resultType="dev.localhost.koitt14.order.OrderListVo">
+    SELECT order_number, order_group, order_price, order_quantity, product_name, user_order.status, user_order.created_date, orderer_name, id
+      FROM user_order INNER JOIN user_payment
+        ON user_order.user_payment_key = user_payment.seq_key
+      INNER JOIN account
+        ON user_order.account_key = account.seq_key
+      WHERE account.name like #{param1}
+      GROUP BY order_number
+      ORDER BY user_order.created_date DESC LIMIT #{param2}, #{param3}
+  </select>
+
+  <select id="getSearchNumberCount" resultType="Integer">
+    SELECT count(DISTINCT order_number)
+      FROM user_order
+      WHERE order_number like #{param1}
+  </select>
+
+  <select id="searchNumberList" resultType="dev.localhost.koitt14.order.OrderListVo">
+    SELECT order_number, order_group, order_price, order_quantity, product_name, user_order.status, user_order.created_date, orderer_name, id
+      FROM user_order INNER JOIN user_payment
+        ON user_order.user_payment_key = user_payment.seq_key
+      INNER JOIN account
+        ON user_order.account_key = account.seq_key
+      WHERE order_number like #{param1}
+      GROUP BY order_number
+      ORDER BY user_order.created_date DESC LIMIT #{param2}, #{param3}
+  </select>
+
+  <select id="getOrderProductList" resultType="dev.localhost.koitt14.order.OrderVo">
+    SELECT * FROM user_order
+      WHERE order_number = #{param1}
+  </select>
+</mapper>

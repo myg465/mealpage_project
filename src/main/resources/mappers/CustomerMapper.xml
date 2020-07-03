@@ -1,0 +1,311 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTO Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="dev.localhost.koitt14.customer.CustomerMapper">
+  <!-- 공지사항 리스트, 페이징 -->
+  <select id="noticeList" resultType="dev.localhost.koitt14.customer.CustomerNoticeVo">
+  	SELECT seq_key, title, content, content_image_filename, created_date, modified_date, account_key,
+	  (SELECT DATEDIFF(NOW(), created_date)) AS nowTimeDifference
+	  FROM notice ORDER BY seq_key DESC
+	  LIMIT #{startRow}, #{limit}
+  </select>
+ 
+  <!-- 공지사항 전체글 수 -->
+  <select id="getNoticeListCount" resultType="int">
+  	SELECT COUNT(*) 
+  	  FROM notice
+  </select>
+
+  <!-- 공지사항 검색 -->
+  <select id="noticeSearch" resultType="dev.localhost.koitt14.customer.CustomerNoticeVo">
+	SELECT seq_key, title, content, content_image_filename, created_date, modified_date, account_key,
+	  (SELECT DATEDIFF(NOW(), created_date)) AS nowTimeDifference  
+	  FROM notice 
+	  WHERE ${searchLikeSql} 
+	  ORDER BY seq_key DESC 
+	  LIMIT #{startRow}, #{limit}
+  </select>
+ 
+  <!-- 공지사항 검색 글 수 -->
+  <select id="getNoticeSearchCount" resultType="int">
+	SELECT COUNT(*) 
+	  FROM notice 
+	  WHERE ${searchLikeSql}
+	  ORDER BY seq_key DESC  	
+  </select>
+   
+  <!-- 공지사항 상세보기 -->
+  <select id="noticeView" resultType="dev.localhost.koitt14.customer.CustomerNoticeVo">
+  	SELECT * FROM notice WHERE seq_key=#{seqKey}
+  </select>
+  
+  <!-- 공지사항 상세보기 시 하단 리스트에 페이지를 알기 위한 RNUM -->
+  <select id="getRnum" resultType="int">
+  	SELECT rn
+  	  FROM 
+  	    (SELECT @rn := @rn + 1 rn, a.*
+         FROM 
+          (SELECT *
+           FROM notice
+           ORDER BY seq_key DESC
+          ) a
+          , (SELECT @rn := 0) b
+        ) c
+      WHERE seq_key=#{seqKey};
+  </select>
+  
+  
+  <!-- 관리자단 공지사항 -->
+  <!-- 관리자단 공지사항 쓰기 -->
+  <insert id="noticeWrite" >
+  	INSERT INTO notice(seq_key, title, content, content_image_filename, created_date, modified_date, account_key)
+	  VALUES (0, #{title}, #{content}, #{imageFileName}, NOW(), NOW(), #{accountKey})
+  </insert>
+  
+  <!-- 관리자단 공지사항 수정페이지 -->
+  <select id="noticeModifyView" resultType="dev.localhost.koitt14.customer.CustomerNoticeVo">
+  	SELECT seq_key, title, content, content_image_filename, created_date, modified_date, account_key,
+	  (SELECT DATEDIFF(NOW(), created_date)) AS nowTimeDifference
+	  FROM notice
+	  WHERE seq_key=#{seqKey}
+  </select>
+  
+  <!-- 관리자단 공지사항 수정 -->
+  <update id="noticeModify">
+  	UPDATE notice
+	  SET title=#{title}, content=#{content}, content_image_filename=#{imageFileName}, modified_date=NOW(), account_key=#{accountKey}
+	  WHERE seq_key=#{seqKey}
+  </update>
+  
+  <!-- 관리자단 공지사항 삭제 -->
+  <delete id="noticeDelete">
+    DELETE FROM notice WHERE seq_key=#{seqKey}
+  </delete>
+  
+  
+  
+  
+  
+  <!-- 비회원 1:1 문의 작성 -->
+  <insert id="nonmemberInquiryWrite">
+	INSERT INTO nonmember_inquiry VALUES
+	(0, #{name}, #{email}, #{tell}, #{title}, #{content}, #{imageFileName}, NOW(), 'N', null, null);
+  </insert>
+  
+  <!-- 관리자단 -->
+  <!-- 관리자단 비회원 1:1 문의 리스트 -->
+  <select id="nonmemberInquriyList" resultType="dev.localhost.koitt14.customer.CustomerNonmemberInquiryVo">
+  	SELECT seq_key, name, email, phone, title, content, filename, created_date, replied, reply, reply_created_date
+  	  FROM nonmember_inquiry
+  	  ORDER BY seq_key DESC
+  	  LIMIT #{startRow}, #{limit}
+  </select>
+  
+  <!-- 관리자단 비회원 1:1 문의 리스트 개수 -->
+  <select id="getNonmemberInquriyListCount" resultType="int">
+  	SELECT COUNT(*)
+  	  FROM nonmember_inquiry;
+  </select>
+  
+  <!-- 관리자단 비회원 1:1 검색 리스트 -->
+  <select id="nonmemberInquirySearch" resultType="dev.localhost.koitt14.customer.CustomerNonmemberInquiryVo" >
+  	SELECT seq_key, name, email, phone, title, content, filename, created_date, replied, reply, reply_created_date
+  	  FROM nonmember_inquiry
+  	  WHERE ${searchLikeSql}
+  	  ORDER BY seq_key DESC
+  	  LIMIT #{startRow}, #{limit}
+  </select>
+  
+  <!-- 관리자단 비회원 1:1 문의 검색 리스트 개수 -->
+  <select id="getNonmemberInquirySearchCount" resultType="int">
+  	SELECT COUNT(*)
+  	  FROM nonmember_inquiry
+  	  WHERE ${searchLikeSql}
+  </select>
+  
+  <!-- 관리자단 비회원 1:1 문의 상세보기 -->
+  <select id="nonmemberInquiryView" resultType="dev.localhost.koitt14.customer.CustomerNonmemberInquiryVo">
+  	SELECT seq_key, name, email, phone, title, content, filename, created_date, replied, reply, reply_created_date
+  	  FROM nonmember_inquiry
+  	  WHERE seq_key=#{seqKey}
+  </select>
+  
+  <!-- 관리자단 비회원 1:1 문의 답변하기 -->
+  <update id="nonmemberInquiryReply">
+  	UPDATE nonmember_inquiry
+  		SET replied='Y', reply=#{reply}, reply_created_date=NOW() 
+  		WHERE seq_key=#{seqKey}  		
+  
+  </update>
+  
+  <!-- 관리자단 비회원 1:1 문의 삭제 -->
+  <delete id="nonmemberInquiryDelete">
+  	DELETE FROM nonmember_inquiry WHERE seq_key=#{seqKey}
+  </delete>
+
+  <!--  -->
+  <select id="getNonmemberInquiryNoRepeyCount" resultType="int">
+  	SELECT COUNT(*)
+  	  FROM nonmember_inquiry
+ 	  WHERE replied='N';
+  </select>
+
+
+
+  
+  <!-- FAQ 전체 리스트 -->
+  <select id="faqList" resultType="dev.localhost.koitt14.customer.CustomerFaqVo">
+  	SELECT seq_key, category, title, content, created_date, modified_date, account_key
+  	  FROM faq ORDER BY seq_key ASC
+  	  LIMIT #{startRow}, #{limit}
+  </select>
+  
+  <!-- FAQ 전체글 수 -->
+  <select id="getFaqListCount" resultType="int">
+  	SELECT COUNT(*) 
+  	  FROM faq
+  </select>
+  
+  <!-- FAQ 카테고리별 리스트 -->
+  <select id="faqCategoryList" resultType="dev.localhost.koitt14.customer.CustomerFaqVo">
+  	SELECT seq_key, category, title, content, created_date, modified_date, account_key
+  	  FROM faq 
+  	  WHERE category=#{category}
+      ORDER BY seq_key ASC
+      LIMIT #{startRow}, #{limit}
+  </select>
+  
+  <!-- FAQ 카테고리별 리스트 개수 -->
+  <select id="getFaqCategoryListCount" resultType="int">
+  	SELECT COUNT(*) 
+  	  FROM faq
+      WHERE category=#{category};
+  </select>
+  
+  <!-- FAQ 검색 -->
+  <select id="faqSearch" resultType="dev.localhost.koitt14.customer.CustomerFaqVo">
+  	SELECT seq_key, category, title, content, created_date, modified_date, account_key
+	  FROM faq
+      WHERE ${searchLikeSql}
+  	  ORDER BY seq_key ASC
+  	  LIMIT #{startRow}, #{limit}
+  </select>
+  
+  <!-- FAQ 검색 리스트 개수 -->
+  <select id="getFaqSearchCount" resultType="int">
+  	SELECT COUNT(*)
+	  FROM faq
+      WHERE ${searchLikeSql}
+      ORDER BY seq_key ASC
+  </select>
+  
+  
+  <!-- 관리자단 FAQ -->
+  <!-- 관리자단 FAQ 상세보기 -->
+  <select id="faqAdminView" resultType="dev.localhost.koitt14.customer.CustomerFaqVo">
+  	SELECT seq_key, category, title, content, created_date, modified_date, account_key
+  	 FROM faq
+  	 WHERE seq_key=#{seqKey}
+  </select>
+  
+  <!-- 관리자단 FAQ 작성 -->
+  <insert id="faqWrite">
+  	INSERT INTO faq(seq_key, category, title, content, created_date, modified_date, account_key)
+  	VALUES (0, #{category}, #{question}, #{answer}, NOW(), NOW(), #{accountKey})
+  </insert>
+   
+  <!-- 관리자단 FAQ 수정페이지 -->
+  <select id="faqModifyView" resultType="dev.localhost.koitt14.customer.CustomerFaqVo">
+  	SELECT seq_key, category, title, content, created_date, modified_date, account_key
+  	 FROM faq
+  	 WHERE seq_key=#{seqKey}
+  </select>
+  
+  <!-- 관리자단 FAQ 수정 -->
+  <update id="faqModify">
+  	UPDATE faq
+	  SET category=#{category}, title=#{question}, content=#{answer}, modified_date=NOW(), account_key=#{accountKey}
+	  WHERE seq_key=#{seqKey}
+  </update>
+  
+  <!-- 관리자단 FAQ 삭제 -->
+  <delete id="faqDelete">
+  	DELETE FROM faq WHERE seq_key=#{seqKey}
+  </delete>
+  
+  
+  
+  
+  
+  
+  
+  <!-- 이용안내 리스트 -->
+  <select id="guide" resultType="dev.localhost.koitt14.customer.CustomerGuideVo">
+  	SELECT seq_key, title, content, created_date, modified_date, account_key
+	  FROM guide
+	  ORDER BY seq_key ASC
+  </select>
+  
+  <!-- 관리자단 이용안내 -->
+  <!-- 관리자단 이용안내 리스트 -->
+  <select id="guideList" resultType="dev.localhost.koitt14.customer.CustomerGuideVo">
+  	SELECT seq_key, title, content, created_date, modified_date, account_key
+	  FROM guide
+	  ORDER BY seq_key ASC
+	  LIMIT #{startRow}, #{limit}
+  </select>
+  
+  <!-- 관리자단 이용안내 리스트 개수 -->
+  <select id="getGuideListCount" resultType="int">
+  	SELECT COUNT(*) 
+  	  FROM guide
+  </select>
+  
+  <!-- 관리자단 이용안내 검색 -->
+  <select id="guideSearch" resultType="dev.localhost.koitt14.customer.CustomerGuideVo">
+  	SELECT seq_key, title, content, created_date, modified_date, account_key
+	  FROM guide
+	  WHERE ${searchLikeSql}
+	  LIMIT #{startRow}, #{limit}
+  </select>
+  
+  <!-- 관리자단 이용안내 검색 리스트 개수 -->
+  <select id="getGuideSearchCount" resultType="int">
+  	SELECT COUNT(*) 
+  	  FROM guide
+  	  WHERE ${searchLikeSql}
+  </select>
+  
+  <!-- 관리자단 이용안내 상세보기 -->
+  <select id="guideView" resultType="dev.localhost.koitt14.customer.CustomerGuideVo">
+  	SELECT seq_key, title, content, created_date, modified_date, account_key
+	  FROM guide
+	  WHERE seq_key=#{seq_key}
+  </select>
+  
+  <!-- 관리자단 이용안내 작성 -->
+  <insert id="guideWrite">
+  	INSERT INTO guide(seq_key, title, content, created_date, modified_date, account_key)
+  	VALUES (0, #{title}, #{content}, NOW(), NOW(), #{accountKey})
+  </insert>
+  
+  <!-- 관리자단 이용안내 수정 페이지 -->
+  <select id="guideModifyView" resultType="dev.localhost.koitt14.customer.CustomerGuideVo">
+  	SELECT seq_key, title, content, created_date, modified_date, account_key
+	  FROM guide
+	  WHERE seq_key=#{seq_key}
+  </select>
+  
+  <!-- 관리자단 이용안내 수정 -->
+  <update id="guideModify">
+  	UPDATE guide
+	  SET title=#{title}, content=#{content}, modified_date=NOW(), account_key=#{accountKey}
+	  WHERE seq_key=#{seqKey}
+  </update>
+  
+  <!-- 관리자단 이용안내 삭제 -->
+  <delete id="guideDelete">
+  	DELETE FROM guide WHERE seq_key=#{seqKey}
+  </delete>
+  
+</mapper>

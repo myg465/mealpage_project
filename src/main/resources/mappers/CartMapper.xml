@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTO Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="dev.localhost.koitt14.cart.CartMapper">
+  <select id="readList" resultType="dev.localhost.koitt14.cart.CartProductVo">
+    SELECT user_cart.seq_key, quantity, product_key, account_key, name, price, stock, detail_image_filename1
+      FROM user_cart INNER JOIN product
+      ON user_cart.product_key = product.seq_key
+      WHERE account_key = #{param1};
+  </select>
+
+  <select id="selectCartByProduct" resultType="dev.localhost.koitt14.cart.CartVo">
+    SELECT * FROM user_cart
+      WHERE product_key = #{param1} and account_key = #{param2}
+  </select>
+
+  <select id="selectCartProduct" resultType="dev.localhost.koitt14.cart.CartProductVo">
+    SELECT user_cart.seq_key, quantity, product_key, account_key, name, price, stock, detail_image_filename1
+      FROM user_cart INNER JOIN product
+      ON user_cart.product_key = product.seq_key
+      WHERE user_cart.seq_key = #{param1}
+  </select>
+
+  <insert id="insertCart">
+    INSERT INTO user_cart
+      VALUES (0, #{param1}, #{param2}, #{param3})
+  </insert>
+
+  <update id="updateCart">
+    UPDATE user_cart
+      SET quantity = #{param1}
+      WHERE seq_key = #{param2}
+  </update>
+
+  <delete id="deleteCart">
+    DELETE FROM user_cart
+      WHERE seq_key = #{param1}
+  </delete>
+</mapper>

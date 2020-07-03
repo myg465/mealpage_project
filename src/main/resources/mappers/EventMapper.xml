@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTO Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="dev.localhost.koitt14.event.EventMapper">
+  <!-- 이벤트 전체 리스트, 페이징 -->
+  <select id="eventList" resultType="dev.localhost.koitt14.event.EventVo">
+  	SELECT seq_key, title, title_image_filename, content, content_image_filename, start_date, end_date, created_date, modified_date, account_key, DATEDIFF(end_date, now()) as nowTimeDifference
+      FROM event
+      <!-- ORDER BY end_date DESC, seq_key DESC  --> 
+      ORDER BY seq_key DESC
+      LIMIT #{startRow}, #{limit}
+  </select>
+  
+  <!-- 이벤트 전체 리스트 개수 -->
+  <select id="getEventListCount" resultType="int">
+  	SELECT COUNT(*) 
+  	  FROM event;
+  </select>
+  
+  <!-- 이벤트 검색 리스트 -->
+  <select id="eventSearch" resultType="dev.localhost.koitt14.event.EventVo">
+  	SELECT seq_key, title, title_image_filename, content, content_image_filename, start_date, end_date, created_date, modified_date, account_key, DATEDIFF(end_date, now()) as nowTimeDifference
+ 	  FROM event
+  	  WHERE ${searchLikeSql}
+  	  ORDER BY end_date DESC, seq_key DESC
+  	  LIMIT #{startRow}, #{limit}
+  </select>  
+  
+  <!-- 이벤트 검색 리스트 개수 -->
+  <select id="getEventSearchCount" resultType="int">
+  	SELECT COUNT(*)
+	  FROM event
+	  WHERE ${searchLikeSql}
+  </select>
+  
+  <!-- 위시 리스트(찜한 상품) 정보가져오기 -->
+  <select id="getWishList" resultType="dev.localhost.koitt14.product.WishListVo">
+  	SELECT uw.seq_key, uw.quantity, uw.product_key, p.detail_image_filename1
+	  FROM user_wishlist AS uw, product AS p
+	  WHERE account_key=#{accountKey} AND uw.product_key=p.seq_key;
+  </select>
+  
+  
+  
+  
+  <!-- 이벤트 상세보기 -->
+  <select id="eventView" resultType="dev.localhost.koitt14.event.EventVo">
+  	SELECT seq_key, title, title_image_filename, content, content_image_filename, start_date, end_date, created_date, modified_date, account_key, DATEDIFF(end_date, now()) as nowTimeDifference
+	  FROM event
+	  WHERE seq_key=#{seqKey};
+  </select>
+  
+  
+  
+  
+  <!-- 관리자단 -->
+  <!-- 관리자단 이벤트 작성 -->
+  <insert id="eventWrite">
+  	INSERT INTO event(seq_key, title, title_image_filename, content, content_image_filename, start_date, end_date, created_date, modified_date, account_key)
+	  VALUES(0, #{title}, #{titleImageFileName}, #{content}, #{contentImageFileName}, #{startDate}, #{endDate}, NOW(), NOW(), #{accountKey});
+  </insert>
+  
+  <!-- 관리자단 이벤트 수정 페이지 -->
+  <select id="eventModifyView" resultType="dev.localhost.koitt14.event.EventVo">
+  	SELECT seq_key, title, title_image_filename, content, content_image_filename, start_date, end_date, created_date, modified_date, account_key, DATEDIFF(end_date, now()) as nowTimeDifference
+	  FROM event
+	  WHERE seq_key=#{seqKey}
+  </select>
+  
+  <!-- 관리자단 이벤트 수정 -->
+  <update id="eventModify">
+  	UPDATE event
+  	 SET title=#{title}, title_image_filename=#{titleImageFileName}, content=#{content}, content_image_filename=#{contentImageFileName}, start_date=#{startDate}, end_date=#{endDate}, modified_date=NOW(), account_key=#{accountKey} 
+  	 WHERE seq_key=#{seqKey}
+  </update>
+
+  <!-- 관리자단 이벤트 삭제 -->
+  <delete id="eventDelete">
+  	DELETE FROM event WHERE seq_key=#{seqKey}
+  </delete>
+
+
+
+
+  
+  <!-- <select id="readList" resultType="dev.localhost.koitt14.template.TemplateVo">
+    SELECT * FROM template
+  </select>
+
+  <select id="readRow" resultType="dev.localhost.koitt14.template.TemplateVo">
+    SELECT * FROM template
+      WHERE seq_key = #{param1}
+  </select>
+
+  <insert id="writeRow">
+    INSERT INTO template (value)
+      VALUES (#{param1})
+  </insert>
+
+  <update id="modifyRow">
+    UPDATE template
+      SET value = #{param2}
+      WHERE seq_key = #{param1}
+  </update>
+
+  <delete id="deleteRow">
+    DELETE FROM template
+      WHERE seq_key = #{param1}
+  </delete> -->
+</mapper>

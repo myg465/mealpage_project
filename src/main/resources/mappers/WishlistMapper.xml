@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTO Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="dev.localhost.koitt14.wishlist.WishlistMapper">
+  <select id="readList" resultType="dev.localhost.koitt14.wishlist.WishlistProductVo">
+    SELECT user_wishlist.seq_key, quantity, product_key, account_key, name, price, stock, detail_image_filename1
+      FROM user_wishlist INNER JOIN product
+      ON user_wishlist.product_key = product.seq_key;
+      WHERE account_key = #{param1};
+    </select>
+
+  <select id="selectWishlistByProduct" resultType="dev.localhost.koitt14.wishlist.WishlistVo">
+    SELECT * FROM user_wishlist
+      WHERE product_key = #{param1} and account_key = #{param2}
+  </select>
+
+  <select id="selectWishlistProduct" resultType="dev.localhost.koitt14.cart.CartProductVo">
+    SELECT user_wishlist.seq_key, quantity, product_key, account_key, name, price, stock, detail_image_filename1
+      FROM user_wishlist INNER JOIN product
+      ON user_wishlist.product_key = product.seq_key
+      WHERE user_wishlist.seq_key = #{param1}
+  </select>
+
+  <insert id="insertWishlist">
+    INSERT INTO user_wishlist
+      VALUES (0, #{param1}, #{param2}, #{param3})
+  </insert>
+
+  <update id="updateWishlist">
+    UPDATE user_wishlist
+      SET quantity = #{param1}
+      WHERE seq_key = #{param2}
+  </update>
+
+  <delete id="deleteWishlist">
+    DELETE FROM user_wishlist
+      WHERE seq_key = #{param1}
+  </delete>
+</mapper>

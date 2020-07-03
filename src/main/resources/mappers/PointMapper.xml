@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTO Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="dev.localhost.koitt14.point.PointMapper">
+  <select id="getAddList" resultType="dev.localhost.koitt14.point.PointVo">
+    SELECT * FROM point_add
+      WHERE account_key = #{param1}
+      ORDER BY created_date DESC
+  </select>
+
+  <select id="getUsedList" resultType="dev.localhost.koitt14.point.PointVo">
+    SELECT * FROM point_used
+      WHERE account_key = #{param1}
+      ORDER BY created_date DESC
+  </select>
+
+  <insert id="insertAddPoint">
+    INSERT INTO point_add (content, point, account_key)
+      VALUES (#{param1}, #{param2}, #{param3})
+  </insert>
+
+  <insert id="insertUsedPoint">
+    INSERT INTO point_used (content, point, account_key)
+      VALUES (#{param1}, #{param2}, #{param3})
+  </insert>
+
+  <!-- 관리자 페이지용 메소드 시작 -->
+  <select id="getAddCount" resultType="Integer">
+    SELECT count(*) FROM point_add
+  </select>
+
+  <select id="getUsedCount" resultType="Integer">
+    SELECT count(*) FROM point_used
+  </select>
+
+  <select id="getAddListByAdmin" resultType="dev.localhost.koitt14.point.PointAccountVo">
+    SELECT point_add.seq_key, content, point_add.point, point_add.created_date, account_key, id, name
+      FROM point_add LEFT JOIN account
+      ON point_add.account_key = account.seq_key
+      ORDER BY created_date DESC LIMIT #{param1}, #{param2}
+  </select>
+
+  <select id="getUsedListByAdmin" resultType="dev.localhost.koitt14.point.PointAccountVo">
+    SELECT point_used.seq_key, content, point_used.point, point_used.created_date, account_key, id, name
+      FROM point_used LEFT JOIN account
+      ON point_used.account_key = account.seq_key
+      ORDER BY created_date DESC LIMIT #{param1}, #{param2}
+  </select>
+</mapper>

@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTO Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="dev.localhost.koitt14.inquiry.InquiryMapper">
+  <!-- 목록 출력 -->
+  <select id="readList" resultType="dev.localhost.koitt14.inquiry.InquiryListVo">
+    SELECT * FROM user_inquiry
+      WHERE account_key = #{param1}
+      ORDER BY created_date DESC LIMIT #{param2}, #{param3}
+  </select>
+
+  <select id="getCount" resultType="Integer">
+    SELECT count(*) as count FROM user_inquiry
+      WHERE account_key = #{param1}
+  </select>
+
+  <!-- 검색목록 출력 -->
+  <select id="searchTitleList" resultType="dev.localhost.koitt14.inquiry.InquiryListVo">
+    SELECT * FROM user_inquiry
+      WHERE account_key = #{param1} and title like #{param2}
+      ORDER BY created_date DESC LIMIT #{param3}, #{param4}
+  </select>
+
+  <select id="getSearchTitleCount" resultType="Integer">
+    SELECT count(*) as count FROM user_inquiry
+      WHERE account_key = #{param1} and title like #{param2}
+  </select>
+
+  <select id="searchContentList" resultType="dev.localhost.koitt14.inquiry.InquiryListVo">
+    SELECT * FROM user_inquiry
+      WHERE account_key = #{param1} and content like #{param2}
+      ORDER BY created_date DESC LIMIT #{param3}, #{param4}
+  </select>
+
+  <select id="getSearchContentCount" resultType="Integer">
+    SELECT count(*) as count FROM user_inquiry
+      WHERE account_key = #{param1} and content like #{param2}
+  </select>
+
+  <select id="searchReplyList" resultType="dev.localhost.koitt14.inquiry.InquiryListVo">
+    SELECT * FROM user_inquiry
+      WHERE account_key = #{param1} and reply like #{param2}
+      ORDER BY created_date DESC LIMIT #{param3}, #{param4}
+  </select>
+
+  <select id="getSearchReplyCount" resultType="Integer">
+    SELECT count(*) as count FROM user_inquiry
+      WHERE account_key = #{param1} and reply like #{param2}
+  </select>
+
+  <!-- 게시물 읽기 -->
+  <select id="readInquiry" resultType="dev.localhost.koitt14.inquiry.InquiryVo">
+    SELECT * FROM user_inquiry
+      WHERE account_key = #{param1} and seq_key = #{param2}
+  </select>
+
+  <!-- 게시물 쓰기 -->
+  <insert id="writeInquiry">
+    INSERT INTO user_inquiry (category, title, content, filename, account_key)
+      VALUES (#{param1}, #{param2}, #{param3}, #{param4}, #{param5})
+  </insert>
+
+  <!-- 게시물 수정 -->
+  <update id="modifyInquiry">
+    UPDATE user_inquiry
+      SET category = #{param1}, title = #{param2}, content = #{param3}, filename = #{param4}, modified_date = NOW()
+      WHERE account_key = #{param5} and seq_key = #{param6}
+  </update>
+
+  <!-- 게시물 삭제 -->
+  <delete id="deleteInquiry">
+    DELETE FROM user_inquiry
+      WHERE account_key = #{param1} and seq_key = #{param2}
+  </delete>
+
+  <!-- 관리자 페이지용 구문 시작 -->
+  <!-- 목록 출력 -->
+  <select id="readAllList" resultType="dev.localhost.koitt14.inquiry.InquiryAccountListVo">
+    SELECT user_inquiry.seq_key, category, title, user_inquiry.created_date, reply_created_date, id, name
+      FROM user_inquiry INNER JOIN account
+      ON user_inquiry.account_key = account.seq_key
+      ORDER BY user_inquiry.created_date DESC LIMIT #{param1}, #{param2}
+  </select>
+
+  <select id="getAllCount" resultType="Integer">
+    SELECT count(*) FROM user_inquiry
+  </select>
+
+  <select id="getNoReplyCount" resultType="Integer">
+    SELECT count(*) FROM user_inquiry
+      WHERE reply IS NULL
+  </select>
+
+  <!-- 게시물 읽기 -->
+  <select id="readInquiryByAdmin" resultType="dev.localhost.koitt14.inquiry.InquiryAccountVo">
+    SELECT user_inquiry.seq_key, category, title, content, filename, user_inquiry.created_date, user_inquiry.modified_date, reply, reply_created_date, reply_modified_date, id, name
+      FROM user_inquiry INNER JOIN account
+      ON user_inquiry.account_key = account.seq_key
+      WHERE user_inquiry.seq_key = #{param1}
+  </select>
+
+  <!-- 검색목록 출력 -->
+  <select id="searchNameListByAdmin" resultType="dev.localhost.koitt14.inquiry.InquiryAccountListVo">
+    SELECT user_inquiry.seq_key, category, title, user_inquiry.created_date, reply_created_date, id, name
+      FROM user_inquiry INNER JOIN account
+      ON user_inquiry.account_key = account.seq_key
+      WHERE name like #{param1}
+      ORDER BY created_date DESC LIMIT #{param2}, #{param3}
+  </select>
+
+  <select id="getSearchNameCountByAdmin" resultType="Integer">
+    SELECT count(*)
+      FROM user_inquiry INNER JOIN account
+      ON user_inquiry.account_key = account.seq_key
+      WHERE name like #{param1}
+  </select>
+
+  <select id="searchTitleListByAdmin" resultType="dev.localhost.koitt14.inquiry.InquiryAccountListVo">
+    SELECT user_inquiry.seq_key, category, title, user_inquiry.created_date, reply_created_date, id, name
+      FROM user_inquiry INNER JOIN account
+      ON user_inquiry.account_key = account.seq_key
+      WHERE title like #{param1}
+      ORDER BY created_date DESC LIMIT #{param2}, #{param3}
+  </select>
+
+  <select id="getSearchTitleCountByAdmin" resultType="Integer">
+    SELECT count(*) as count FROM user_inquiry
+      WHERE title like #{param1}
+  </select>
+
+  <select id="searchContentListByAdmin" resultType="dev.localhost.koitt14.inquiry.InquiryAccountListVo">
+    SELECT user_inquiry.seq_key, category, title, user_inquiry.created_date, reply_created_date, id, name
+      FROM user_inquiry INNER JOIN account
+      ON user_inquiry.account_key = account.seq_key
+      WHERE content like #{param1}
+      ORDER BY created_date DESC LIMIT #{param2}, #{param3}
+  </select>
+
+  <select id="getSearchContentCountByAdmin" resultType="Integer">
+    SELECT count(*) as count FROM user_inquiry
+      WHERE content like #{param1}
+  </select>
+
+ <!-- 게시물 삭제 -->
+ <delete id="deleteInquiryByAdmin">
+  DELETE FROM user_inquiry
+    WHERE seq_key = #{param2}
+  </delete>
+
+  <!-- 게시물 답변 쓰기 -->
+  <update id="replyInquiry">
+    UPDATE user_inquiry
+      SET reply = #{param1}, reply_created_date = NOW()
+      WHERE seq_key = #{param2}
+  </update>
+
+  <!-- 게시물 답변 수정 -->
+  <update id="modifyReply">
+    UPDATE user_inquiry
+      SET reply = #{param1}, reply_modified_date = NOW()
+      WHERE seq_key = #{param2}
+  </update>
+
+  <!-- 게시물 답변 삭제 -->
+  <update id="deleteReply">
+    UPDATE user_inquiry
+      SET reply = null, reply_created_date = null, reply_modified_date = null
+      WHERE seq_key = #{param1}
+  </update>
+</mapper>

@@ -1,0 +1,5 @@
+#container { text-align: center; }
+h1 { font-size: 40px; }
+hr { display: block; width: 400px; height: 0.5px; border: 1px solid gray; border-bottom: 0; }
+
+.sbtn { display:inline-block; width:130px; height:40px; line-height:40px; background:steelblue; color:#fff !important; font-size:14px; font-weight:600; margin: auto; }

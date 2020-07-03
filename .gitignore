@@ -1,0 +1,22 @@
+# Directories #
+.history/
+.mvn/
+.settings/
+.vscode/
+target/
+archive/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### ETC ###
+HELP.md
+mvnw
+mvnw.cmd
+pom.xml

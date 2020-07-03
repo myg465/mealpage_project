@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTO Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="dev.localhost.koitt14.review.ReviewMapper">
+  
+  <!-- 리뷰전체리스트 -->
+  <select id="reviewList" resultType="dev.localhost.koitt14.review.ReviewVo">
+    
+	SELECT u.seq_key,u.content,u.grade,u.image_filename,u.created_date,IFNULL(u.modified_date,0),
+	u.product_key,u.account_key,a.id 
+	  FROM user_review AS u,account AS a
+	  WHERE product_key=#{seqKey} AND u.account_key=a.seq_key
+	  ORDER BY seq_key DESC 
+	  limit #{reviewStartRow},10;
+  </select>
+  <!-- 리뷰수 카운트 -->
+  <select id="reviewListCount" resultType="int">
+  	SELECT COUNT(*) FROM user_review 
+  	  WHERE product_key=#{seqKey}
+  </select>
+  
+  <!-- 별점평균 얻기 -->
+  <select id="gradeAvg" resultType="int">
+  	SELECT IFNULL(ROUND(AVG(grade)),0) FROM user_review 
+  	  WHERE product_key=#{seqKey}
+  </select>
+  
+  <!-- 배송정보 얻기 -->
+  <select id="status" resultType="Map">
+  	SELECT status, review 
+  	  FROM user_order 
+  	  WHERE seq_key=#{seqKey} 
+  	  AND account_key=#{accountKey}
+  </select>
+  
+  <!-- 리뷰작성 -->
+  <insert id="reviewWrite">
+  	INSERT INTO user_review(seq_key,content,grade,image_filename,product_key,account_key)
+  	  VALUES (0,#{content},#{grade},#{imageFileName},#{productKey},#{accountKey});
+  </insert>
+  
+  <!-- 리뷰작성시 상태변경 -->
+  <update id="reviewStatusChange">
+  	UPDATE user_order SET review='Y'
+  	  WHERE account_key=#{accountKey} 
+  	  AND product_key=#{productKey}
+  </update>
+  
+  <!-- 리뷰 수정뷰 얻어오기 -->
+  <select id="reviewModifyView" resultType="dev.localhost.koitt14.review.ReviewVo">
+  	SELECT seq_key,content,grade,image_filename,created_date,IFNULL(modified_date,0),
+	product_key,account_key FROM user_review 
+	  WHERE seq_key=#{seqKey}
+  </select>
+  
+  <!-- 리뷰 수정 -->
+  <update id="reviewModify">
+  	UPDATE user_review 
+  	  SET content=#{content},grade=#{grade},image_filename=#{imageFileName},modified_date=SYSDATE() 
+  	  WHERE seq_key=#{seqKey}
+  </update>
+  
+  <!-- 리뷰 삭제 -->
+  <delete id="reviewDelete">
+  	DELETE FROM user_review WHERE seq_key=#{seqKey}
+  </delete>
+  
+  <!-- ======================================관리자 전용========================================== -->
+  
+  <!-- 전체얻기 -->
+  <select id="reviewListAll" resultType="dev.localhost.koitt14.review.ReviewVo">
+  	SELECT u.seq_key,u.content,u.grade,u.image_filename,u.created_date,IFNULL(u.modified_date,0),
+	  u.product_key,u.account_key,a.id,p.name,p.category1,p.category2
+	  FROM user_review AS u INNER JOIN account AS a INNER JOIN product AS p
+	  ON u.account_key=a.seq_key AND u.product_key=p.seq_key
+	  <if test="search!='All'">
+	    WHERE p.category1 LIKE CONCAT('%',#{search},'%')
+	    OR p.category2 LIKE CONCAT('%',#{search},'%')
+	    OR p.name LIKE CONCAT('%',#{search},'%')
+	  </if>
+	  ${sqlOrder} 
+	  limit #{reviewStartRow},10;
+  </select>
+  
+  
+  <!-- 검색카운트 얻기 -->
+  <select id="reviewListSearchCount" resultType="int">
+  	SELECT count(*)
+	  FROM user_review AS u INNER JOIN product AS p
+	  ON u.product_key=p.seq_key
+	  <if test="search!='All'">
+	    WHERE p.category1 LIKE CONCAT('%',#{search},'%')
+	    OR p.category2 LIKE CONCAT('%',#{search},'%')
+	    OR p.name LIKE CONCAT('%',#{search},'%');
+	  </if>
+  </select>
+  
+  
+  
+  
+
+
+</mapper>

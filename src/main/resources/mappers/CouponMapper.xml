@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTO Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="dev.localhost.koitt14.coupon.CouponMapper">
+  <select id="getAbleList" resultType="dev.localhost.koitt14.coupon.CouponVo">
+    SELECT * FROM user_coupon
+      WHERE account_key = #{param1} and end_date &gt;= #{param2} and status = '사용가능'
+      ORDER BY created_date DESC
+  </select>
+
+  <select id="getDisableList" resultType="dev.localhost.koitt14.coupon.CouponVo">
+    SELECT * FROM user_coupon
+      WHERE account_key = #{param1} and (end_date &lt; #{param2} or status &lt;&gt; '사용가능')
+      ORDER BY created_date DESC
+  </select>
+
+ <select id="getCouponCount" resultType="Integer">
+    SELECT count(*) FROM user_coupon
+      WHERE account_key = #{param1} and end_date &gt;= #{param2} and status = '사용가능'
+  </select>
+
+  <insert id="insertPriceCoupon">
+    INSERT INTO user_coupon
+      (name, minimum_price, discount_price, start_date, end_date, account_key)
+      VALUES (#{param1}, #{param2}, #{param3}, #{param4}, #{param5}, #{param6});
+  </insert>
+
+  <insert id="insertPercentCoupon">
+    INSERT INTO user_coupon
+      (name, minimum_price, discount_percent, start_date, end_date, account_key)
+      VALUES (#{param1}, #{param2}, #{param3}, #{param4}, #{param5}, #{param6});
+  </insert>
+
+  <update id="updateDisable">
+    UPDATE user_coupon
+      SET status = '기간만료'
+      WHERE account_key = #{param1} and end_date &lt; #{param2} and status = '사용가능'
+  </update>
+
+  <update id="updateUsed">
+    UPDATE user_coupon
+      SET status = '사용완료'
+      WHERE seq_key = #{param1}
+  </update>
+
+  <!-- 관리자 페이지용 메소드 시작 -->
+  <select id="getAbleListByAdmin" resultType="dev.localhost.koitt14.coupon.CouponAccountVo">
+    SELECT user_coupon.seq_key, user_coupon.name, minimum_price, discount_price, discount_percent, start_date, end_date, status, user_coupon.created_date, user_coupon.account_key, id, account.name as account_name
+      FROM user_coupon LEFT JOIN account
+      ON user_coupon.account_key = account.seq_key
+      WHERE end_date &gt;= #{param1} and status = '사용가능'
+      ORDER BY created_date DESC LIMIT #{param2}, #{param3};
+  </select>
+
+  <select id="getDisableListByAdmin" resultType="dev.localhost.koitt14.coupon.CouponAccountVo">
+    SELECT user_coupon.seq_key, user_coupon.name, minimum_price, discount_price, discount_percent, start_date, end_date, status, user_coupon.created_date, user_coupon.account_key, id, account.name as account_name
+      FROM user_coupon LEFT JOIN account
+      ON user_coupon.account_key = account.seq_key
+      WHERE end_date &lt; #{param1} or status &lt;&gt; '사용가능'
+      ORDER BY created_date DESC LIMIT #{param2}, #{param3};
+  </select>
+
+ <select id="getAbleCount" resultType="Integer">
+    SELECT count(*) FROM user_coupon
+      WHERE end_date &gt;= #{param1} and status = '사용가능'
+  </select>
+
+ <select id="getDisableCount" resultType="Integer">
+    SELECT count(*) FROM user_coupon
+      WHERE end_date &lt; #{param1} or status &lt;&gt; '사용가능'
+  </select>
+
+  <update id="updateDisableByAdmin">
+    UPDATE user_coupon
+      SET status = '기간만료'
+      WHERE end_date &lt; #{param1} and status = '사용가능'
+  </update>
+</mapper>
