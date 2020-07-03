@@ -1,2 +1,2 @@
 # mealpage_project
-mealpage프로젝트 저장소입니다.
+2020/6/1 ~ 2020/6/24 진행된 mealpage프로젝트 프로그램 입니다.
